@@ -1,25 +1,25 @@
 {
-  "name": "koishi-plugin-market-info",
+  "name": "koishi-plugin-market-info-plus",
   "description": "Koishi plugin market information",
-  "version": "2.1.0",
+  "version": "1.0.0",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "files": [
     "lib",
     "dist"
   ],
-  "author": "Shigma <shigma10826@gmail.com>",
+  "author": "itzdrli <itzdrli@proton.me>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/koishijs/koishi-plugin-market-info.git"
+    "url": "git+https://github.com/itzdrli/koishi-plugin-market-info-plus.git"
   },
   "bugs": {
-    "url": "https://github.com/koishijs/koishi-plugin-market-info/issues"
+    "url": "https://github.com/itzdrli/koishi-plugin-market-info-plus/issues"
   },
-  "homepage": "https://github.com/koishijs/koishi-plugin-market-info#readme",
+  "homepage": "https://github.com/itzdrli/koishi-plugin-market-info-plus#readme",
   "scripts": {
-    "build": "atsc -b"
+    "build": "yakumo build"
   },
   "koishi": {
     "description": {
@@ -39,13 +39,14 @@
     "manager"
   ],
   "peerDependencies": {
-    "koishi": "^4.15.0"
+    "koishi": "^4.17.0"
   },
   "devDependencies": {
     "@koishijs/registry": "^6.0.4",
     "@types/node": "^20.8.10",
     "atsc": "^1.2.2",
     "koishi": "^4.15.0",
+    "koishi-plugin-puppeteer": "^3.9.0",
     "typescript": "^5.2.2"
   }
 }

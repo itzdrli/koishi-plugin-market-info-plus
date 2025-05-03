@@ -1,8 +1,10 @@
 import { Context, Dict, Schema, Time, deepEqual, pick, sleep } from 'koishi'
 import {} from '@koishijs/plugin-market'
 import type { SearchObject, SearchResult } from '@koishijs/registry'
+import { } from 'koishi-plugin-puppeteer'
+import { renderMarketUpdate } from './renderImage'
 
-export const name = 'market-info'
+export const name = 'market-info-plus'
 
 interface Receiver {
   platform: string
@@ -10,6 +12,8 @@ interface Receiver {
   channelId: string
   guildId?: string
 }
+
+export const inject = ["puppeteer"]
 
 const Receiver: Schema<Receiver> = Schema.object({
   platform: Schema.string().required().description('平台名称。'),
@@ -30,7 +34,7 @@ export interface Config {
 
 export const Config: Schema<Config> = Schema.object({
   rules: Schema.array(Receiver).role('table').description('推送规则列表。'),
-  endpoint: Schema.string().default('https://registry.koishi.chat/index.json').description('插件市场地址。'),
+  endpoint: Schema.string().default('https://kp.itzdrli.cc').description('插件市场地址。'),
   interval: Schema.number().default(Time.minute * 30).description('轮询间隔 (毫秒)。'),
   showHidden: Schema.boolean().default(false).description('是否显示隐藏的插件。'),
   showDeletion: Schema.boolean().default(false).description('是否显示删除的插件。'),
@@ -39,9 +43,7 @@ export const Config: Schema<Config> = Schema.object({
 })
 
 export function apply(ctx: Context, config: Config) {
-  ctx.i18n.define('zh', require('./locales/zh-CN'))
-
-  const logger = ctx.logger('market')
+  const logger = ctx.logger('market-info-plus')
 
   const makeDict = (result: SearchResult) => {
     const dict: Dict<SearchObject> = {}
@@ -72,24 +74,25 @@ export function apply(ctx: Context, config: Config) {
             )
           })
           if (options.receive) {
-            if (index >= 0) return session.text('.not-modified')
+            if (index >= 0) return `未修改订阅信息。`
             config.rules.push(pick(session, ['platform', 'selfId', 'channelId', 'guildId']))
           } else {
-            if (index < 0) return session.text('.not-modified')
+            if (index < 0) return `未修改订阅信息。`
             config.rules.splice(index, 1)
           }
           ctx.scope.update(config, false)
-          return session.text('.updated')
+          return `已更新订阅信息。`
         }
   
         if (!name) {
           const objects = Object.values(previous).filter(data => !data.manifest.hidden)
-          return session.text('.overview', [objects.length])
+          return `当前共有 ${objects.length} 个插件`
         }
 
         const data = previous[name]
-        if (!data) return session.text('.not-found', [name])
-        return session.text('.detail', data)
+        if (!data) `未找到插件 ${name}。`
+        return `${data.shortname} (${data.package.version})\n\n` +
+          `发布者：@${data.package.publisher.username}`
       })
 
     ctx.setInterval(async () => {
@@ -97,10 +100,12 @@ export function apply(ctx: Context, config: Config) {
       const diff = Object.keys({ ...previous, ...current }).map((name) => {
         const version1 = previous[name]?.package.version
         const version2 = current[name]?.package.version
-        if (version1 === version2) return
+        if (version1 === version2) {
+          return
+        }
 
         if (!version1) {
-          let output = <p><i18n path="market-info.created"></i18n></p>
+          let output = `新增：${name} (${version2})`
           if (config.showPublisher) output += ` (@${current[name].package.publisher.username})`
           if (config.showDescription) {
             const { description } = current[name].manifest
@@ -126,12 +131,18 @@ export function apply(ctx: Context, config: Config) {
 
       const content = ['[插件市场更新]', ...diff].join('\n')
       logger.info(content)
+      
+      // Generate image
+      const image = await renderMarketUpdate(ctx, config, diff, previous)
+      
       const delay = ctx.root.config.delay.broadcast
       for (let index = 0; index < config.rules.length; ++index) {
         if (index && delay) await sleep(delay)
         const { platform, selfId, channelId, guildId } = config.rules[index]
         const bot = ctx.bots.find(bot => bot.platform === platform && bot.selfId === selfId)
-        bot.sendMessage(channelId, content, guildId)
+        // Send both text and image
+        await bot.sendMessage(channelId, content, guildId)
+        await bot.sendMessage(channelId, image, guildId)
       }
     }, config.interval)
   })
