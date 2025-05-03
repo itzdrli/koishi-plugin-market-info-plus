@@ -105,31 +105,31 @@ export function apply(ctx: Context, config: Config) {
         }
 
         if (!version1) {
-          let output = `新增：${name} (${version2})`
+          let output = `新增：</br>${name} (${version2})`
           if (config.showPublisher) output += ` (@${current[name].package.publisher.username})`
           if (config.showDescription) {
             const { description } = current[name].manifest
             if (description && typeof description === 'object') {
-              output += `\n  ${description.zh || description.en}`
+              output += `</br>  ${description.zh || description.en}`
             } else if (description && typeof description === 'string') {
-              output += `\n  ${description}`
+              output += `</br>  ${description}`
             }
           }
           return output
         }
 
         if (version2) {
-          return `更新：${name} (${version1} → ${version2})`
+          return `更新：</br>${name} (${version1} → ${version2})`
         }
 
         if (config.showDeletion) {
-          return `删除：${name}`
+          return `删除：</br>${name}`
         }
       }).filter(Boolean).sort()
       previous = current
       if (!diff.length) return
 
-      const content = ['[插件市场更新]', ...diff].join('\n')
+      const content = ['插件市场更新', ...diff].join('\n')
       logger.info(content)
       
       // Generate image
@@ -141,9 +141,77 @@ export function apply(ctx: Context, config: Config) {
         const { platform, selfId, channelId, guildId } = config.rules[index]
         const bot = ctx.bots.find(bot => bot.platform === platform && bot.selfId === selfId)
         // Send both text and image
-        await bot.sendMessage(channelId, content, guildId)
+        // await bot.sendMessage(channelId, content, guildId)
         await bot.sendMessage(channelId, image, guildId)
       }
     }, config.interval)
+  })
+
+  // test command for example output
+  ctx.command('test-m', { authority: 3 }).action(({ session }) => {
+    // set demo data then generate image
+    const demoData = [
+      '新增：</br>koishi-plugin-test (1.0.0) @test',
+      '更新：</br>koishi-plugin-test2 (1.0.0 → 2.0.0)',
+      '删除：</br>koishi-plugin-test3',
+    ]
+    const demoPrevious = {
+      'koishi-plugin-test': {
+        shortname: 'koishi-plugin-test',
+        package: {
+          version: '1.0.0',
+          publisher: {
+            username: 'test',
+          },
+        },
+        manifest: {
+          hidden: false,
+          description: {
+            zh: '测试插件',
+            en: 'Test plugin',
+          },
+        },
+      },
+      'koishi-plugin-test2': {
+        shortname: 'koishi-plugin-test2',
+        package: {
+          version: '2.0.0',
+          publisher: {
+            username: 'test',
+          },   
+        },
+        manifest: {
+          hidden: false,
+          description: {
+            zh: '测试插件2',
+            en: 'Test plugin2',
+          },
+        },
+      },
+      'koishi-plugin-test3': {
+        shortname: 'koishi-plugin-test3',
+        package: {
+          version: '1.0.0',
+          publisher: {
+            username: 'test',
+          },
+        },
+        manifest: {
+          hidden: false,
+          description: {
+            zh: '测试插件3',
+            en: 'Test plugin3',
+          },
+        },
+      },
+    }
+    const image = renderMarketUpdate(ctx, config, demoData, demoPrevious)
+    return image.then((image) => {
+      return image
+    }
+    ).catch((error) => {
+      logger.error('Error generating image:', error)
+      return '生成图片失败'
+    })
   })
 }
