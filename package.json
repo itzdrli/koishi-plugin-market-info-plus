@@ -44,9 +44,14 @@
   "devDependencies": {
     "@koishijs/registry": "^6.0.4",
     "@types/node": "^20.8.10",
-    "atsc": "^1.2.2",
+    "esbuild": "^0.25.3",
     "koishi": "^4.15.0",
     "koishi-plugin-puppeteer": "^3.9.0",
-    "typescript": "^5.2.2"
+    "tsc": "^2.0.4",
+    "typescript": "^5.2.2",
+    "yakumo": "^1.0.0",
+    "yakumo-esbuild": "^1.0.0",
+    "yakumo-tsc": "^1.0.0",
+    "yml-register": "^1.2.5"
   }
 }
