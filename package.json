@@ -42,7 +42,8 @@
     "koishi": "^4.17.0"
   },
   "devDependencies": {
-    "@koishijs/registry": "^6.0.4",
+    "@koishijs/plugin-market": "^2.11.6",
+    "@koishijs/registry": "^7.0.3",
     "@types/node": "^20.8.10",
     "esbuild": "^0.25.3",
     "koishi": "^4.15.0",
