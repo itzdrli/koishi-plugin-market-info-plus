@@ -63,26 +63,7 @@ export function apply(ctx: Context, config: Config) {
     let previous = await getMarket()
 
     ctx.command('market [name]')
-      .option('receive', '-r', { authority: 3, value: true })
-      .option('receive', '-R', { authority: 3, value: false })
       .action(async ({ session, options }, name) => {
-        if (typeof options.receive === 'boolean') {
-          const index = config.rules.findIndex(receiver => {
-            return deepEqual(
-              pick(receiver, ['platform', 'selfId', 'channelId', 'guildId']),
-              pick(session, ['platform', 'selfId', 'channelId', 'guildId']),
-            )
-          })
-          if (options.receive) {
-            if (index >= 0) return `未修改订阅信息。`
-            config.rules.push(pick(session, ['platform', 'selfId', 'channelId', 'guildId']))
-          } else {
-            if (index < 0) return `未修改订阅信息。`
-            config.rules.splice(index, 1)
-          }
-          ctx.scope.update(config, false)
-          return `已更新订阅信息。`
-        }
   
         if (!name) {
           const objects = Object.values(previous).filter(data => !data.manifest.hidden)
