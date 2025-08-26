@@ -2,7 +2,8 @@ import { Context, Dict, Schema, Time, deepEqual, pick, sleep } from 'koishi'
 import {} from '@koishijs/plugin-market'
 import type { SearchObject, SearchResult } from '@koishijs/registry'
 import { } from 'koishi-plugin-puppeteer'
-import { renderMarketUpdate } from './renderImage'
+import { renderMarketUpdate, UpdateItem } from './renderImage'
+import { marked } from 'marked'
 
 export const name = 'market-info-plus'
 
@@ -86,32 +87,47 @@ export function apply(ctx: Context, config: Config) {
         }
 
         if (!version1) {
-          let output = `新增：</br>${name} (${version2})`
-          if (config.showPublisher) output += ` (@${current[name].package.publisher.username})`
+          const output: UpdateItem = {
+            type: 'new',
+            name: name,
+            version: version2,
+            publisher: config.showPublisher ? current[name].package.publisher.username : null,
+            description: null
+          }
+          
           if (config.showDescription) {
             const { description } = current[name].manifest
             if (description && typeof description === 'object') {
-              output += `</br>  ${description.zh || description.en}`
+              output.description = description.zh || description.en
             } else if (description && typeof description === 'string') {
-              output += `</br>  ${description}`
+              output.description = description
             }
           }
           return output
         }
 
         if (version2) {
-          return `更新：</br>${name} (${version1} → ${version2})`
+          const output: UpdateItem = {
+            type: 'update',
+            name: name,
+            oldVersion: version1,
+            newVersion: version2
+          }
+          return output
         }
 
         if (config.showDeletion) {
-          return `删除：</br>${name}`
+          const output: UpdateItem = {
+            type: 'delete',
+            name: name
+          }
+          return output
         }
       }).filter(Boolean).sort()
       previous = current
       if (!diff.length) return
 
-      const content = ['插件市场更新', ...diff].join('\n')
-      logger.info(content)
+      logger.info(`插件市场更新：${diff.length} 个变更`)
       
       // Generate image
       const image = await renderMarketUpdate(ctx, config, diff, previous)
@@ -132,9 +148,23 @@ export function apply(ctx: Context, config: Config) {
   ctx.command('test-m', { authority: 3 }).action(({ session }) => {
     // set demo data then generate image
     const demoData = [
-      '新增：</br>koishi-plugin-test (1.0.0) @test',
-      '更新：</br>koishi-plugin-test2 (1.0.0 → 2.0.0)',
-      '删除：</br>koishi-plugin-test3',
+      {
+        type: 'new' as const,
+        name: 'koishi-plugin-test',
+        version: '1.0.0',
+        publisher: 'test',
+        description: '# 测试插件\n这是一个**测试插件**，支持以下功能：\n\n- 基础功能测试\n- Markdown 渲染\n- 图片显示\n\n![npm](https://img.shields.io/npm/v/koishi-plugin-market-info-plus?style=flat-square)\n\n`代码示例：console.log("Hello World")`'
+      },
+      {
+        type: 'update' as const,
+        name: 'koishi-plugin-test2',
+        oldVersion: '1.0.0',
+        newVersion: '2.0.0'
+      },
+      {
+        type: 'delete' as const,
+        name: 'koishi-plugin-test3'
+      }
     ]
     const demoPrevious = {
       'koishi-plugin-test': {

@@ -1,7 +1,7 @@
 {
   "name": "koishi-plugin-market-info-plus",
   "description": "Koishi plugin market information",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "files": [
@@ -44,10 +44,12 @@
   "devDependencies": {
     "@koishijs/plugin-market": "^2.11.6",
     "@koishijs/registry": "^7.0.3",
+    "@types/marked": "^6.0.0",
     "@types/node": "^20.8.10",
     "esbuild": "^0.25.3",
     "koishi": "^4.15.0",
     "koishi-plugin-puppeteer": "^3.9.0",
+    "marked": "^16.2.0",
     "tsc": "^2.0.4",
     "typescript": "^5.2.2",
     "yakumo": "^1.0.0",
